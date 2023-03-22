@@ -24,17 +24,16 @@ func NewMatrix(i, j int, input []int) Matrix {
 	return m
 }
 
-func NewIdentityMatrix(i, j int) (Matrix, error) {
-	if i != j {
-		return nil, errNonSquare
-	}
-	m := NewZeroMatrix(i, j)
+// NewIdentityMatrix returns an identity matrix of specified dimension
+func NewIdentityMatrix(i int) Matrix {
+	m := NewZeroMatrix(i, i)
 	for k := 0; k < i; k++ {
 		m[k][k] = 1
 	}
-	return m, nil
+	return m
 }
 
+// NewConstantMatrix returns a matrix where all elements == x
 func NewConstantMatrix(i, j, x int) Matrix {
 	m := NewZeroMatrix(i, j)
 	product := i * j
@@ -45,7 +44,8 @@ func NewConstantMatrix(i, j, x int) Matrix {
 	return m
 }
 
-func GetIJ(m Matrix) (int, int) {
+// GetIJ returns the dimensions of a supplied matrix
+func (m Matrix) GetIJ() (int, int) {
 	i, j := len(m), len(m[0])
 	return i, j
 }
