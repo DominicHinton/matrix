@@ -3,18 +3,20 @@ package main
 import (
 	"fmt"
 
-	"github.com/DominicHinton/matrix/operations"
+	seq "github.com/DominicHinton/matrix/seqoperations"
 )
+
+// TODO - change to unit tests
 
 func main() {
 	in := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	m := operations.NewMatrix(3, 4, in)
+	m := seq.NewMatrix(3, 4, in)
 	fmt.Println(m)
 
-	id := operations.NewIdentityMatrix(4)
+	id := seq.NewIdentityMatrix[int](4)
 	fmt.Println(id)
 
-	three := operations.NewConstantMatrix(2, 5, 3)
+	three := seq.NewConstantMatrix(2, 5, 3)
 	fmt.Println(three)
 
 	added3 := m.SequentialAddToElements(3)
@@ -31,8 +33,8 @@ func main() {
 	fmt.Println(m, "\nm / 2\n", div2)
 	fmt.Println(m, "\n4 / m\n", fourDiv)
 
-	oneTimes := operations.NewMatrix(2, 3, []int{1, 2, 3, 4, 5, 6})
-	tenTimes := operations.NewMatrix(2, 3, []int{10, 20, 30, 40, 50, 60})
+	oneTimes := seq.NewMatrix(2, 3, []int{1, 2, 3, 4, 5, 6})
+	tenTimes := seq.NewMatrix(2, 3, []int{10, 20, 30, 40, 50, 60})
 
 	addedMatrices, err := oneTimes.SequentialAddMatrices(tenTimes)
 	if err != nil {
@@ -54,14 +56,20 @@ func main() {
 	w, _ := m.GetVectorFromRow(2)
 	fmt.Println("m:\n", m, "\nv from row 2:\n", w)
 
-	A := operations.NewMatrix(2, 3, []int{2, 3, 4, 1, 0, 0})
-	B := operations.NewMatrix(3, 2, []int{0, 1000, 1, 100, 0, 10})
+	A := seq.NewMatrix(2, 3, []int{2, 3, 4, 1, 0, 0})
+	B := seq.NewMatrix(3, 2, []int{0, 1000, 1, 100, 0, 10})
 	AB, _ := A.SequentialMultiplyMatrices(B)
 	fmt.Println("A:\n", A, "\nB:\n", B, "\nAB:\n", AB)
 
-	Q := operations.NewMatrix(2, 3, []int{1, 2, 3, 0, -6, 7})
+	Q := seq.NewMatrix(2, 3, []int{1, 2, 3, 0, -6, 7})
 	QT := Q.SequentialTranspose()
 	fmt.Println("Q:\n", Q, "\nQT:\n", QT)
 
 	fmt.Printf("%s", Q)
+
+	J := seq.NewMatrix(2, 3, []int{2, 3, 4, 1, 0, 0})
+	fmt.Printf("\n%s\n", J)
+	J.FillMatrix(-1)
+	fmt.Printf("\n%s\n", J)
+
 }
