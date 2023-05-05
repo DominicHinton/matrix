@@ -1,6 +1,9 @@
-package seqoperations
+package concoperations
 
-import "math"
+import (
+	"math"
+	"sync"
+)
 
 // Dimensions returns the dimensions of a supplied matrix.
 func (m Matrix[N]) Dimensions() (int, int) {
@@ -21,13 +24,24 @@ func (m Matrix[N]) IsSquare() bool {
 // MapFunctionToElements takes fn: a function that returns a result of operation on one element of matrix m,
 // x: a second argument for fn and returns new matrix with same operation applied to every element
 func (m Matrix[N]) MapFunctionToElements(fn ConstantSequentialOperater[N]) Matrix[N] {
+
 	rows, columns := m.Dimensions()
 	output := NewZeroMatrix[N](rows, columns)
+
+	var wg sync.WaitGroup
+	wg.Add(rows * columns)
+
 	for i := 0; i < rows; i++ {
 		for j := 0; j < columns; j++ {
-			output[i][j] = fn(m[i][j])
+			a, b := i, j
+			go func() {
+				defer wg.Done()
+				output[a][b] = fn(m[a][b])
+			}()
 		}
 	}
+	wg.Wait()
+
 	return output
 }
 
@@ -38,9 +52,16 @@ func (m Matrix[N]) MapFunctionToElementsInRowInPlace(fn ConstantSequentialOperat
 	if row >= rows || row < 0 {
 		return errRowColSuppliedOutBounds
 	}
+	var wg sync.WaitGroup
+	wg.Add(cols)
 	for j := 0; j < cols; j++ {
-		m[row][j] = fn(m[row][j])
+		k := j
+		go func() {
+			defer wg.Done()
+			m[row][k] = fn(m[row][k])
+		}()
 	}
+	wg.Wait()
 	return nil
 }
 
@@ -59,11 +80,18 @@ func (m Matrix[N]) ApplyOneToOne(n Matrix[N], fn OneToOneSequentialOperater[N]) 
 		return nil, errDifferentDimension
 	}
 	p := NewZeroMatrix[N](rows, columns)
+	var wg sync.WaitGroup
+	wg.Add(rows * columns)
 	for i := 0; i < rows; i++ {
 		for j := 0; j < columns; j++ {
-			p[i][j] = fn(m[i][j], n[i][j])
+			a, b := i, j
+			go func() {
+				defer wg.Done()
+				p[a][b] = fn(m[a][b], n[a][b])
+			}()
 		}
 	}
+	wg.Wait()
 	return p, nil
 }
 
@@ -361,11 +389,19 @@ func (m Matrix[N]) SubMatrix(rowMin, colMin, rowMax, colMax int) (Matrix[N], err
 		return Matrix[N]{}, errRowColSuppliedOutBounds
 	}
 	submatrix := NewZeroMatrix[N](rows, columns)
+	var wg sync.WaitGroup
+
 	for i := rowMin; i < rowMax; i++ {
 		for j := colMin; j < colMax; j++ {
-			submatrix[i-rowMin][j-colMin] = m[i][j]
+			wg.Add(1)
+			a, b := i, j
+			go func() {
+				defer wg.Done()
+				submatrix[a-rowMin][b-colMin] = m[a][b]
+			}()
 		}
 	}
+	wg.Wait()
 	return submatrix, nil
 }
 

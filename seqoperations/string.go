@@ -1,5 +1,6 @@
 package seqoperations
 
+/*
 import (
 	"fmt"
 	"strconv"
@@ -20,3 +21,4 @@ func (m Matrix[N]) String() string {
 	}
 	return strings.Join(s, "")
 }
+*/

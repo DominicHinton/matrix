@@ -1,4 +1,8 @@
-package seqoperations
+package concoperations
+
+import (
+	"sync"
+)
 
 // packages
 
@@ -10,19 +14,27 @@ func NewZeroMatrix[N Number](i, j int) Matrix[N] {
 	if (i < 0) || (j < 0) {
 		return Matrix[N]{}
 	}
-	output := make(Matrix[N], i)
+
+	var wg sync.WaitGroup
+	wg.Add(i)
+	m := make(Matrix[N], i)
+
 	for row := 0; row < i; row++ {
-		line := make([]N, j)
-		output[row] = line
+		r := row
+		go func() {
+			defer wg.Done()
+			line := make([]N, j)
+			m[r] = line
+		}()
 	}
-	return output
+	wg.Wait()
+
+	return m
 }
 
-// NewMatrix returns a matrix of dimensions i x j.
+// NewMatrixFromSlice returns a matrix of dimensions i x j.
 // If the input is smaller than i multiplied by j then it will be repeated to populate the matrix.
 // If the input is larger than i multiplied by j then only the earlier entries that fit into the matrix will populate.
-
-// Consider - matrix pool, to store matrices for later use
 func NewMatrixFromSlice[N Number](i, j int, input []N) Matrix[N] {
 	if (i < 0) || (j < 0) || (len(input) == 0) {
 		return Matrix[N]{}
@@ -30,10 +42,17 @@ func NewMatrixFromSlice[N Number](i, j int, input []N) Matrix[N] {
 	m := NewZeroMatrix[N](i, j)
 	product := i * j
 	inputLength := len(input)
-	for k := 0; k < product; k++ {
-		iPos, jPos, kPos := k/j, k%j, k%inputLength
-		m[iPos][jPos] = input[kPos]
+	var wg sync.WaitGroup
+	wg.Add(product)
+	for g := 0; g < product; g++ {
+		k := g
+		go func() {
+			defer wg.Done()
+			iPos, jPos, kPos := k/j, k%j, k%inputLength
+			m[iPos][jPos] = input[kPos]
+		}()
 	}
+	wg.Wait()
 	return m
 }
 
@@ -44,9 +63,16 @@ func NewIdentityMatrix[N Number](dimension int) Matrix[N] {
 	}
 	m := NewZeroMatrix[N](dimension, dimension)
 	one := N(1)
-	for k := 0; k < dimension; k++ {
-		m[k][k] = one
+	var wg sync.WaitGroup
+	wg.Add(dimension)
+	for d := 0; d < dimension; d++ {
+		k := d
+		go func() {
+			defer wg.Done()
+			m[k][k] = one
+		}()
 	}
+	wg.Wait()
 	return m
 }
 
@@ -60,9 +86,16 @@ func NewConstantMatrix[N Number](iDim, jDim int, x N) Matrix[N] {
 // FillMatrix fills a matrix in order that every element is the supplied constant
 func (m Matrix[N]) FillMatrix(x N) {
 	rows, columns := m.Dimensions()
+	var wg sync.WaitGroup
+	wg.Add(rows * columns)
 	for i := 0; i < rows; i++ {
 		for j := 0; j < columns; j++ {
-			m[i][j] = x
+			a, b := i, j
+			go func() {
+				defer wg.Done()
+				m[a][b] = x
+			}()
 		}
 	}
+	wg.Wait()
 }

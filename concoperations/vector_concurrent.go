@@ -1,12 +1,17 @@
-package seqoperations
+package concoperations
+
+import "sync"
 
 // DotProduct returns dot product and true if vectors are same length, 0 and false otherwise
+// No concurrency implemented as this is not beleived to offer performance benefit here.
 func (v Vector[N]) DotProduct(u Vector[N]) (N, bool) {
 	length := len(v)
 	var total N
 	if length != len(u) {
 		return total, false
 	}
+	var wg sync.WaitGroup
+	wg.Add(length)
 	for i := 0; i < length; i++ {
 		total += v[i] * u[i]
 	}
@@ -18,9 +23,16 @@ func (v Vector[N]) DotProduct(u Vector[N]) (N, bool) {
 func (v Vector[N]) MapFunctionToElements(fn ConstantSequentialOperater[N]) Vector[N] {
 	length := len(v)
 	output := NewZeroVector[N](length)
-	for k := 0; k < length; k++ {
-		output[k] = fn(v[k])
+	var wg sync.WaitGroup
+	wg.Add(length)
+	for i := 0; i < length; i++ {
+		k := i
+		go func() {
+			defer wg.Done()
+			output[k] = fn(v[k])
+		}()
 	}
+	wg.Wait()
 	return output
 }
 
